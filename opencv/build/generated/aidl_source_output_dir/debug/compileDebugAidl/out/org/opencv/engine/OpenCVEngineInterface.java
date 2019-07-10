@@ -1,6 +1,6 @@
 /*
  * This file is auto-generated.  DO NOT MODIFY.
- * Original file: C:\\Users\\Abdullah\\Desktop\\MyApplicationwe\\opencv\\java\\src\\org\\opencv\\engine\\OpenCVEngineInterface.aidl
+ * Original file: C:\\Users\\kilia\\Desktop\\Android Studio\\opencv_cam\\opencv\\java\\src\\org\\opencv\\engine\\OpenCVEngineInterface.aidl
  */
 package org.opencv.engine;
 /**

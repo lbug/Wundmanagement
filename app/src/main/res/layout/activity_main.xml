@@ -1,52 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.constraint.ConstraintLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    tools:context=".MainActivity">
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="1280px"
+    android:layout_height="720px"
+    xmlns:opencv="http://schemas.android.com/apk/res-auto">
 
-    <LinearLayout
+    <org.opencv.android.JavaCameraView
+        android:id="@+id/faceDetectionJavaCameraView2"
+        opencv:camera_id="any"
+        opencv:show_fps="true"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:orientation="vertical">
-
-        <Button
-            android:id="@+id/button2"
-            android:layout_width="360dp"
-            android:layout_height="wrap_content"
-            android:onClick="bckgRem"
-            android:text="Detect" />
-
-        <TextView
-            android:id="@+id/textView"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:textAlignment="center"
-            android:textAppearance="@style/TextAppearance.AppCompat.Medium"
-            android:textColor="#4CAF50" />
-
-        <TextView
-            android:id="@+id/textView2"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:textAlignment="center"
-            android:textAppearance="@style/TextAppearance.AppCompat.Medium"
-            android:textColor="#0000FF" />
-
-        <ImageView
-            android:id="@+id/ImageView01"
-            android:layout_width="match_parent"
-            android:layout_height="348dp" />
-
-        <TextView
-            android:id="@+id/textView3"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:textAlignment="center"
-            android:textAppearance="@style/TextAppearance.AppCompat.Medium"
-            android:textColor="#F4366C" />
-
-    </LinearLayout>
-
+        android:layout_column="0" />
 </android.support.constraint.ConstraintLayout>
