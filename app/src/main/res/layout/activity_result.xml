@@ -11,13 +11,20 @@
         android:layout_height="match_parent"
         android:orientation="vertical">
 
+        <TextView
+            android:id="@+id/textView2"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Ist das Bild okay? "
+            android:textAlignment="center"
+            android:textAppearance="@style/TextAppearance.AppCompat.Display2" />
+
         <ImageView
             android:id="@+id/imageView"
-            android:layout_width="640px"
-            android:layout_height="360px"
-            android:layout_marginTop="180px"
-            android:layout_marginLeft="320px"
-            />
+            android:layout_width="853px"
+            android:layout_height="480px"
+            android:layout_marginLeft="213px"
+            android:layout_marginTop="70px" />
 
         <TextView
             android:id="@+id/textView"

@@ -55,16 +55,22 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
 import ai.snips.hermes.IntentMessage;
+import ai.snips.hermes.Slot;
+import ai.snips.nlu.ontology.SlotValue;
 import ai.snips.platform.SnipsPlatformClient;
 import kotlin.Unit;
 import kotlin.jvm.functions.Function0;
 import kotlin.jvm.functions.Function1;
+
+import static android.widget.Toast.*;
 
 public class MainActivity extends AppCompatActivity  implements CameraBridgeViewBase.CvCameraViewListener2{
 
     private static final String TAG = MainActivity.class.getSimpleName();
     CameraBridgeViewBase cameraBridgeViewBase;
     private File assistantLocation;
+    private SnipsPlatformClient client;
+
     Mat mat;
     Bitmap mBitmap;
     private static final double refSize = 3.55475628437;
@@ -72,9 +78,13 @@ public class MainActivity extends AppCompatActivity  implements CameraBridgeView
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        requestWindowFeature(Window.FEATURE_NO_TITLE);
-        getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
-                WindowManager.LayoutParams.FLAG_FULLSCREEN);
+        this.getWindow().getDecorView().setSystemUiVisibility(
+                View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                        | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                        | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                        | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                        | View.SYSTEM_UI_FLAG_FULLSCREEN
+                        | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
         setContentView(R.layout.activity_main);
 
         //faceDetectionImageView = (ImageView) findViewById(R.id.faceDetectionJavaCameraView2);
@@ -98,7 +108,10 @@ public class MainActivity extends AppCompatActivity  implements CameraBridgeView
     }
     @Override
     public void onResume() {
+        //client.connect(this.getApplicationContext());
+        //startSnips(assistantLocation);
         super.onResume();
+
         if (!OpenCVLoader.initDebug()) {
             Log.d(TAG, "Internal OpenCV library not found. Using OpenCV Manager for initialization");
             OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION, this, baseLoaderCallback);
@@ -110,6 +123,11 @@ public class MainActivity extends AppCompatActivity  implements CameraBridgeView
     @Override
     protected void onPause (){
         super.onPause();
+    }
+
+    @Override
+    protected void onStop(){
+        super.onStop();
     }
 
 
@@ -231,8 +249,36 @@ public class MainActivity extends AppCompatActivity  implements CameraBridgeView
                 // hier werden die verschiedenen handler aufgerufen
                 switch (intentMessage.getIntent().getIntentName()){
                     case "lbug:TakePicture":
+                        Log.d("Lukas", intentMessage.toString());
                         handleTakePicture(intentMessage);
                         break;
+
+                    case "lbug:ConfirmAction":
+                        Log.d("Lukas", intentMessage.toString());
+                        handleConfirmAction(intentMessage);
+                        break;
+                    case "lbug:LocalizeWoundSector":
+                        Log.d("Lukas", intentMessage.toString());
+                        handleLocalizeWoundSector(intentMessage);
+                        break;
+
+                    case "lbug:WundverlaufAnzeigen":
+                        Log.d("Lukas", intentMessage.toString());
+                        handleWundverlaufAnzeigen(intentMessage);
+                        break;
+
+                    case "lbug:StartCamera":
+                        Log.d("Lukas", intentMessage.toString());
+                        handleStartCamera(intentMessage);
+                        break;
+
+                    case "lbug:Home":
+                        Log.d("Lukas", intentMessage.toString());
+                        handleHome(intentMessage);
+                        break;
+
+                    default:
+                        Log.d("Lukas", "Default case");
                 }
                 return null;
             }
@@ -247,15 +293,36 @@ public class MainActivity extends AppCompatActivity  implements CameraBridgeView
 
         return client;
     }
+
+
     private void startSnips(File snipsDir) {
-        SnipsPlatformClient client = createClient(snipsDir);
+        client = createClient(snipsDir);
         client.connect(this.getApplicationContext());
     }
 
 
+
     //voice commands
+
+
+    private void handleHome(final IntentMessage intentMessage){
+        Intent intent = new Intent(this, Dashboard.class);
+        startActivity(intent);
+    }
+
+    private void handleStartCamera(final IntentMessage intentMessage) {
+        showToast("StartCamera funktioniert!");
+    }
+
+
+    private void handleWundverlaufAnzeigen(final IntentMessage intentMessage) {
+        Intent intent = new Intent(this, Woundhistory.class);
+        startActivity(intent);
+    }
+
+
     private void handleTakePicture(final IntentMessage intentMessage){
-        Toast.makeText(this, "Command received", Toast.LENGTH_LONG).show();
+        makeText(this, "Command received", LENGTH_LONG).show();
         // convert to bitmap:
         mBitmap = Bitmap.createBitmap(mat.cols(), mat.rows(),Bitmap.Config.ARGB_8888);
         Utils.matToBitmap(mat, mBitmap);
@@ -271,9 +338,46 @@ public class MainActivity extends AppCompatActivity  implements CameraBridgeView
         }
         mBitmap.compress(Bitmap.CompressFormat.PNG, 100, out);
 
+        Log.d("Bild gemacht", "Es wurde ein Bild gemacht");
+
         detectWound(procpath);
 
         //cameraBridgeViewBase.setVisibility(View.GONE);
+    }
+    private void handleLocalizeWoundSector(final IntentMessage intentMessage) {
+        List<Slot> slots = intentMessage.getSlots();
+        int v1 = (int)((SlotValue.NumberValue)slots.get(0).getValue()).getValue();
+        Localization.woundSector = v1;
+        String message = "Wundsektor" + v1;
+        Log.d("Lukas", message);
+        makeText(this, message, LENGTH_LONG).show();
+        Log.d("Lukas", "handleLocalizeWoundSector");
+        Intent intent = new Intent(this, Localization.class);
+        startActivity(intent);
+    }
+
+    private void handleConfirmAction(final IntentMessage intentMessage) {
+
+        List<Slot> slots = intentMessage.getSlots();
+        String v1 = slots.get(0).component1();
+        String answer = getIntent().getStringExtra("ConfirmAction");
+        Log.d("Confirmation",v1);
+
+        switch(v1){
+            case"ja":
+                Intent localizationIntent = new Intent(this, Localization.class);
+                makeText(this, "ConfirmAction", LENGTH_SHORT).show();
+                startActivity(localizationIntent);
+                break;
+
+            case"nein":
+                makeText(this, "ConfirmAction nein", LENGTH_SHORT).show();
+                onBackPressed();
+                break;
+
+            default:
+                break;
+        }
     }
 
 
@@ -385,6 +489,8 @@ public class MainActivity extends AppCompatActivity  implements CameraBridgeView
         mediaScan(procpath);
 
         double woundSize = refSize * rcurrentMax/gcurrentMax;
+
+        Woundhistory.procpath = procpath;
         sendAway(procpath,woundSize);
     }
 
@@ -429,7 +535,7 @@ public class MainActivity extends AppCompatActivity  implements CameraBridgeView
     //miscellaneous
     private void showToast(final String text) {
         runOnUiThread(() ->
-                Toast.makeText(getApplicationContext(), text, Toast.LENGTH_SHORT).show()
+                makeText(getApplicationContext(), text, LENGTH_SHORT).show()
         );
     }
     public void showImagePopup() {
