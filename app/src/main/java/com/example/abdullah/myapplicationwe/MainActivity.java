@@ -37,8 +37,11 @@ import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfInt;
 import org.opencv.core.MatOfPoint;
+import org.opencv.core.MatOfPoint2f;
 import org.opencv.core.Point;
+import org.opencv.core.Rect;
 import org.opencv.core.Scalar;
+import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
 
 import java.io.BufferedInputStream;
@@ -63,6 +66,8 @@ import kotlin.jvm.functions.Function0;
 import kotlin.jvm.functions.Function1;
 
 import static android.widget.Toast.*;
+import static org.opencv.imgproc.Imgproc.MORPH_ELLIPSE;
+import static org.opencv.imgproc.Imgproc.getStructuringElement;
 
 public class MainActivity extends AppCompatActivity  implements CameraBridgeViewBase.CvCameraViewListener2{
 
@@ -392,6 +397,13 @@ public class MainActivity extends AppCompatActivity  implements CameraBridgeView
         Mat rgbMat = new Mat();
         Imgproc.cvtColor(mat, rgbMat, Imgproc.COLOR_RGBA2BGR);
 
+        Imgproc.blur(rgbMat, rgbMat, new Size(30, 30));
+        Imgproc.threshold(rgbMat,rgbMat,114,255,0);
+        Mat element = getStructuringElement( MORPH_ELLIPSE,
+                new Size( 30, 30 ),
+                new Point( 3, 3 ) );
+        Imgproc.dilate( rgbMat, rgbMat, element );
+
         /**Mat dilatedMat = new Mat();
          Mat kernel = Imgproc.getStructuringElement(Imgproc.MORPH_ELLIPSE, new Size(7, 7));
          Imgproc.morphologyEx(rgbMat, dilatedMat, Imgproc.MORPH_OPEN, kernel);**/
@@ -457,6 +469,8 @@ public class MainActivity extends AppCompatActivity  implements CameraBridgeView
             rhullList.add(new MatOfPoint(hullPoints));
         }
 
+        MatOfPoint2f[] contoursPoly  = new MatOfPoint2f[rcontours.size()];
+        Rect[] boundRect = new Rect[rcontours.size()];
         double rlargest_area =0;
         int rlargest_contour_index = 0;
         for (int contourIdx = 0; contourIdx < rcontours.size(); contourIdx++) {
@@ -475,7 +489,13 @@ public class MainActivity extends AppCompatActivity  implements CameraBridgeView
             }
         }
 
-        Imgproc.drawContours(mat, rhullList, rlargest_contour_index, new Scalar(0, 255, 0, 255), 3);
+        Imgproc.drawContours(mat, rhullList, rlargest_contour_index, new Scalar(0, 255, 0, 255), 2);
+
+        //lets draw a bounding rectangle
+        contoursPoly[rlargest_contour_index] = new MatOfPoint2f();
+        Imgproc.approxPolyDP(new MatOfPoint2f(rcontours.get(rlargest_contour_index).toArray()), contoursPoly[rlargest_contour_index], 3, true);
+        boundRect[rlargest_contour_index] = Imgproc.boundingRect(new MatOfPoint(contoursPoly[rlargest_contour_index].toArray()));
+        Imgproc.rectangle(mat, boundRect[rlargest_contour_index].tl(), boundRect[rlargest_contour_index].br(), new Scalar(0, 255, 0, 255), 2);
 
         Bitmap outputImage= Bitmap.createBitmap(mat.cols(), mat.rows(), Bitmap.Config.ARGB_8888);
         Utils.matToBitmap(mat, outputImage);
