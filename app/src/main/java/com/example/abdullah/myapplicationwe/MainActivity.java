@@ -75,14 +75,16 @@ public class MainActivity extends AppCompatActivity  implements CameraBridgeView
     CameraBridgeViewBase cameraBridgeViewBase;
     private File assistantLocation;
     private SnipsPlatformClient client;
-
     Mat mat;
     Bitmap mBitmap;
     private static final double refSize = 3.55475628437;
+    private static final double refLengthandWidth = 1.06372650069;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
         this.getWindow().getDecorView().setSystemUiVisibility(
                 View.SYSTEM_UI_FLAG_LAYOUT_STABLE
                         | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
@@ -92,7 +94,6 @@ public class MainActivity extends AppCompatActivity  implements CameraBridgeView
                         | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
         setContentView(R.layout.activity_main);
 
-        //faceDetectionImageView = (ImageView) findViewById(R.id.faceDetectionJavaCameraView2);
         cameraBridgeViewBase = (CameraBridgeViewBase) findViewById(R.id.faceDetectionJavaCameraView2);
         cameraBridgeViewBase.setVisibility(CameraBridgeViewBase.VISIBLE);
         cameraBridgeViewBase.setCvCameraViewListener(this);
@@ -101,7 +102,6 @@ public class MainActivity extends AppCompatActivity  implements CameraBridgeView
         extractAssistantIfNeeded(assistantLocation);
         startSnips(assistantLocation);
 
-
         if (!OpenCVLoader.initDebug()){
             Log.d(TAG, "Internal OpenCv library found,Using OpenCV Manager for initialization ");
             OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION,this,baseLoaderCallback);
@@ -109,6 +109,7 @@ public class MainActivity extends AppCompatActivity  implements CameraBridgeView
             Log.d(TAG, "OpenCV library found inside package. Using it!");
             baseLoaderCallback.onManagerConnected(LoaderCallbackInterface.SUCCESS);
         }
+        System.out.println("I JUST CREATED");
 
     }
     @Override
@@ -116,6 +117,8 @@ public class MainActivity extends AppCompatActivity  implements CameraBridgeView
         //client.connect(this.getApplicationContext());
         //startSnips(assistantLocation);
         super.onResume();
+
+        System.out.println("I JUST RESUMED");
 
         if (!OpenCVLoader.initDebug()) {
             Log.d(TAG, "Internal OpenCV library not found. Using OpenCV Manager for initialization");
@@ -128,14 +131,13 @@ public class MainActivity extends AppCompatActivity  implements CameraBridgeView
     @Override
     protected void onPause (){
         super.onPause();
+        System.out.println("I JUST PAUSED");
     }
-
     @Override
     protected void onStop(){
         super.onStop();
+        System.out.println("I JUST STOPPED");
     }
-
-
     BaseLoaderCallback baseLoaderCallback = new BaseLoaderCallback(this) {
         @Override
         public void onManagerConnected(int status) {
@@ -143,15 +145,12 @@ public class MainActivity extends AppCompatActivity  implements CameraBridgeView
                 case LoaderCallbackInterface.SUCCESS:{
                     Log.i(TAG, "OpenCV loaded successfully");
                     cameraBridgeViewBase.enableView();
-
                 }
-
                 break;
                 default:
                     super.onManagerConnected(status);
                     break;
             }
-
         }
     };
 
@@ -298,39 +297,32 @@ public class MainActivity extends AppCompatActivity  implements CameraBridgeView
 
         return client;
     }
-
-
     private void startSnips(File snipsDir) {
         client = createClient(snipsDir);
         client.connect(this.getApplicationContext());
     }
 
 
-
     //voice commands
-
-
     private void handleHome(final IntentMessage intentMessage){
         Intent intent = new Intent(this, Dashboard.class);
         startActivity(intent);
     }
-
     private void handleStartCamera(final IntentMessage intentMessage) {
         showToast("StartCamera funktioniert!");
     }
-
-
     private void handleWundverlaufAnzeigen(final IntentMessage intentMessage) {
         Intent intent = new Intent(this, Woundhistory.class);
         startActivity(intent);
     }
-
-
     private void handleTakePicture(final IntentMessage intentMessage){
         makeText(this, "Command received", LENGTH_LONG).show();
-        // convert to bitmap:
-        mBitmap = Bitmap.createBitmap(mat.cols(), mat.rows(),Bitmap.Config.ARGB_8888);
-        Utils.matToBitmap(mat, mBitmap);
+        // convert to bitmap
+        System.out.println("RECT SIZE I SHIT MYSELF HERE");
+        if (mat.size().height != 0 && mat.size().width != 0) {
+            mBitmap = Bitmap.createBitmap(mat.cols(), mat.rows(),Bitmap.Config.ARGB_8888);
+            Utils.matToBitmap(mat, mBitmap);
+        }
 
         java.util.Date date=new Date();
         String procpath = Environment.getExternalStorageDirectory() + "/Pictures/"+date+"image.jpg";
@@ -346,8 +338,6 @@ public class MainActivity extends AppCompatActivity  implements CameraBridgeView
         Log.d("Bild gemacht", "Es wurde ein Bild gemacht");
 
         detectWound(procpath);
-
-        //cameraBridgeViewBase.setVisibility(View.GONE);
     }
     private void handleLocalizeWoundSector(final IntentMessage intentMessage) {
         List<Slot> slots = intentMessage.getSlots();
@@ -360,7 +350,6 @@ public class MainActivity extends AppCompatActivity  implements CameraBridgeView
         Intent intent = new Intent(this, Localization.class);
         startActivity(intent);
     }
-
     private void handleConfirmAction(final IntentMessage intentMessage) {
 
         List<Slot> slots = intentMessage.getSlots();
@@ -497,6 +486,9 @@ public class MainActivity extends AppCompatActivity  implements CameraBridgeView
         boundRect[rlargest_contour_index] = Imgproc.boundingRect(new MatOfPoint(contoursPoly[rlargest_contour_index].toArray()));
         Imgproc.rectangle(mat, boundRect[rlargest_contour_index].tl(), boundRect[rlargest_contour_index].br(), new Scalar(0, 255, 0, 255), 2);
 
+        System.out.println("RECT SIZE"+boundRect[rlargest_contour_index].size().height);
+        System.out.println("RECT SIZE"+boundRect[rlargest_contour_index].size().width);
+
         Bitmap outputImage= Bitmap.createBitmap(mat.cols(), mat.rows(), Bitmap.Config.ARGB_8888);
         Utils.matToBitmap(mat, outputImage);
         FileOutputStream out = null;
@@ -514,68 +506,33 @@ public class MainActivity extends AppCompatActivity  implements CameraBridgeView
         sendAway(procpath,woundSize);
     }
 
-    private void sendAway(String procpath, double woundSize){
-
-        Intent intent = new Intent(this, Result.class);
-        intent.putExtra("image", procpath);
-        intent.putExtra("woundSize", woundSize);
-
-        startActivity(intent);
-    }
-
-
-    //wound location
-    public void locateWound(View view) {
-        showImagePopup();
-    }
-
 
     @Override
     public void onCameraViewStarted(int width, int height) {
         mat = new Mat(height,width, CvType.CV_8UC4);
     }
-
     @Override
     public void onCameraViewStopped() {
         mat.release();
     }
-
     @Override
     public Mat onCameraFrame(CameraBridgeViewBase.CvCameraViewFrame inputFrame) {
-
-
-
         mat = inputFrame.rgba();
         return mat;
     }
 
 
-
-
     //miscellaneous
+    private void sendAway(String procpath, double woundSize){
+        Intent intent = new Intent(this, Result.class);
+        intent.putExtra("image", procpath);
+        intent.putExtra("woundSize", woundSize);
+        startActivity(intent);
+    }
     private void showToast(final String text) {
         runOnUiThread(() ->
                 makeText(getApplicationContext(), text, LENGTH_SHORT).show()
         );
-    }
-    public void showImagePopup() {
-        Dialog builder = new Dialog(this);
-        builder.requestWindowFeature(Window.FEATURE_NO_TITLE);
-        builder.getWindow().setBackgroundDrawable(
-                new ColorDrawable(android.graphics.Color.TRANSPARENT));
-        builder.setOnDismissListener(new DialogInterface.OnDismissListener() {
-            @Override
-            public void onDismiss(DialogInterface dialogInterface) {
-                //nothing;
-            }
-        });
-
-        ImageView imageView = new ImageView(this);
-        imageView.setImageResource(R.mipmap.img);
-        builder.addContentView(imageView, new RelativeLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.MATCH_PARENT));
-        builder.show();
     }
     public void mediaScan(String picpath) {
         MediaScannerConnection.scanFile(this,
@@ -583,16 +540,6 @@ public class MainActivity extends AppCompatActivity  implements CameraBridgeView
                 (path, uri) -> {}
         );
     }
-    /*private void showPic(String procpath) {
-
-        mediaScan(procpath);
-        Bitmap bitmap = BitmapFactory.decodeFile(procpath);
-
-        ImageView imageview = findViewById(R.id.ImageView01); //sets imageview as the bitmap
-        imageview.setImageBitmap(bitmap);
-
-
-    }*/
     private String copy(String path, int copyNumber){
         String copy_path = path + "_copy" + copyNumber + ".png";
         try {
@@ -604,7 +551,4 @@ public class MainActivity extends AppCompatActivity  implements CameraBridgeView
         }
         return null;
     }
-
-
-
 }

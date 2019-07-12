@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="1280px"
-    android:layout_height="720px"
+    android:layout_width="1920px"
+    android:layout_height="1080px"
     xmlns:opencv="http://schemas.android.com/apk/res-auto">
 
     <org.opencv.android.JavaCameraView
@@ -9,6 +9,5 @@
         opencv:camera_id="any"
         opencv:show_fps="true"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_column="0" />
+        android:layout_height="match_parent" />
 </android.support.constraint.ConstraintLayout>
