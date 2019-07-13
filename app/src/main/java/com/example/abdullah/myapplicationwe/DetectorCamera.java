@@ -28,6 +28,7 @@ import org.opencv.core.Rect;
 import org.opencv.core.Scalar;
 import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
+import org.opencv.photo.Photo;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -37,23 +38,21 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-import ai.snips.hermes.IntentMessage;
-
 import static android.widget.Toast.*;
 import static org.opencv.imgproc.Imgproc.MORPH_ELLIPSE;
 import static org.opencv.imgproc.Imgproc.getStructuringElement;
 
-public class MainActivity extends AppCompatActivity implements CameraBridgeViewBase.CvCameraViewListener2 {
+public class DetectorCamera extends AppCompatActivity implements CameraBridgeViewBase.CvCameraViewListener2 {
 
-    private static final String TAG = MainActivity.class.getSimpleName();
+    private static final String TAG = DetectorCamera.class.getSimpleName();
     CameraBridgeViewBase cameraBridgeViewBase;
     Mat mat;
     Bitmap mBitmap;
-    private static final double refSize = 3.55475628437;
-    private static final double refLengthandWidth = 1.06372650069;
-    private static MainActivity instance;
+    private static final double refSize = 4.71;
+    private static final double refLengthandWidth = 2.45;
+    private static DetectorCamera instance;
 
-    public static MainActivity getInstance() {
+    public static DetectorCamera getInstance() {
         return instance;
     }
 
@@ -72,7 +71,7 @@ public class MainActivity extends AppCompatActivity implements CameraBridgeViewB
                         | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
         setContentView(R.layout.activity_main);
 
-        cameraBridgeViewBase = (CameraBridgeViewBase) findViewById(R.id.faceDetectionJavaCameraView2);
+        cameraBridgeViewBase = findViewById(R.id.faceDetectionJavaCameraView2);
         cameraBridgeViewBase.setVisibility(CameraBridgeViewBase.VISIBLE);
         cameraBridgeViewBase.setCvCameraViewListener(this);
 
@@ -136,7 +135,6 @@ public class MainActivity extends AppCompatActivity implements CameraBridgeViewB
     public void handleTakePicture() {
         makeText(this, "Command received", LENGTH_LONG).show();
         // convert to bitmap
-        System.out.println("RECT SIZE I SHIT MYSELF HERE");
         if (mat.size().height != 0 && mat.size().width != 0) {
             mBitmap = Bitmap.createBitmap(mat.cols(), mat.rows(), Bitmap.Config.ARGB_8888);
             Utils.matToBitmap(mat, mBitmap);
@@ -171,12 +169,14 @@ public class MainActivity extends AppCompatActivity implements CameraBridgeViewB
         Mat rgbMat = new Mat();
         Imgproc.cvtColor(mat, rgbMat, Imgproc.COLOR_RGBA2BGR);
 
+        Photo.fastNlMeansDenoising(rgbMat, rgbMat, 50, 7, 21);
+
         Imgproc.blur(rgbMat, rgbMat, new Size(30, 30));
-        Imgproc.threshold(rgbMat, rgbMat, 114, 255, 0);
-        Mat element = getStructuringElement(MORPH_ELLIPSE,
-                new Size(30, 30),
-                new Point(3, 3));
-        Imgproc.dilate(rgbMat, rgbMat, element);
+        Imgproc.threshold(rgbMat,rgbMat,114,255,0);
+        Mat element = getStructuringElement( MORPH_ELLIPSE,
+                new Size( 30, 30 ),
+                new Point( 3, 3 ) );
+        Imgproc.dilate( rgbMat, rgbMat, element );
 
         /**Mat dilatedMat = new Mat();
          Mat kernel = Imgproc.getStructuringElement(Imgproc.MORPH_ELLIPSE, new Size(7, 7));
@@ -210,7 +210,7 @@ public class MainActivity extends AppCompatActivity implements CameraBridgeViewB
             ghullList.add(new MatOfPoint(hullPoints));
         }
 
-        double glargest_area = 0;
+        double glargest_area =0;
         int glargest_contour_index = 0;
         for (int contourIdx = 0; contourIdx < gcontours.size(); contourIdx++) {
             double contourArea = Imgproc.contourArea(gcontours.get(contourIdx));
@@ -220,15 +220,7 @@ public class MainActivity extends AppCompatActivity implements CameraBridgeViewB
             }
         }
 
-        double gcurrentMax = 0;
-        for (MatOfPoint c : ghullList) {
-            double area = Imgproc.contourArea(c);
-            if (area > gcurrentMax) {
-                gcurrentMax = area;
-            }
-        }
-
-        Imgproc.drawContours(mat, ghullList, glargest_contour_index, new Scalar(0, 0, 255, 255), 3);
+        Imgproc.drawContours(mat, ghullList, glargest_contour_index, new Scalar(0, 0, 255, 255), 2);
 
         List<MatOfPoint> rhullList = new ArrayList<>();
         for (MatOfPoint contour : rcontours) {
@@ -243,23 +235,16 @@ public class MainActivity extends AppCompatActivity implements CameraBridgeViewB
             rhullList.add(new MatOfPoint(hullPoints));
         }
 
-        MatOfPoint2f[] contoursPoly = new MatOfPoint2f[rcontours.size()];
+        MatOfPoint2f[] contoursPoly  = new MatOfPoint2f[rcontours.size()];
         Rect[] boundRect = new Rect[rcontours.size()];
-        double rlargest_area = 0;
+        Rect[] boundRectg = new Rect[gcontours.size()];
+        double rlargest_area =0;
         int rlargest_contour_index = 0;
         for (int contourIdx = 0; contourIdx < rcontours.size(); contourIdx++) {
             double contourArea = Imgproc.contourArea(rcontours.get(contourIdx));
             if (contourArea > rlargest_area) {
                 rlargest_area = contourArea;
                 rlargest_contour_index = contourIdx;
-            }
-        }
-
-        double rcurrentMax = 0;
-        for (MatOfPoint c : rhullList) {
-            double area = Imgproc.contourArea(c);
-            if (area > rcurrentMax) {
-                rcurrentMax = area;
             }
         }
 
@@ -271,13 +256,16 @@ public class MainActivity extends AppCompatActivity implements CameraBridgeViewB
         boundRect[rlargest_contour_index] = Imgproc.boundingRect(new MatOfPoint(contoursPoly[rlargest_contour_index].toArray()));
         Imgproc.rectangle(mat, boundRect[rlargest_contour_index].tl(), boundRect[rlargest_contour_index].br(), new Scalar(0, 255, 0, 255), 2);
 
-        System.out.println("RECT SIZE" + boundRect[rlargest_contour_index].size().height);
-        System.out.println("RECT SIZE" + boundRect[rlargest_contour_index].size().width);
+        //lets create an imaginary bounding rectangle for the marker
+        contoursPoly[glargest_contour_index] = new MatOfPoint2f();
+        Imgproc.approxPolyDP(new MatOfPoint2f(gcontours.get(glargest_contour_index).toArray()), contoursPoly[glargest_contour_index], 3, true);
+        boundRectg[glargest_contour_index] = Imgproc.boundingRect(new MatOfPoint(contoursPoly[glargest_contour_index].toArray()));
+        //Imgproc.rectangle(mat, boundRectg[glargest_contour_index].tl(), boundRectg[glargest_contour_index].br(), new Scalar(0, 0, 255, 255), 2);
 
-        double rectSizeHeight = boundRect[rlargest_contour_index].size().height;
-        double rectSizeWidth = boundRect[rlargest_contour_index].size().width;
+        double realWoundLength = (refLengthandWidth*boundRect[rlargest_contour_index].size().height)/(boundRectg[glargest_contour_index].size().height);
+        double realWoundWidth = (refLengthandWidth*boundRect[rlargest_contour_index].size().width)/(boundRectg[glargest_contour_index].size().width);
 
-        Bitmap outputImage = Bitmap.createBitmap(mat.cols(), mat.rows(), Bitmap.Config.ARGB_8888);
+        Bitmap outputImage= Bitmap.createBitmap(mat.cols(), mat.rows(), Bitmap.Config.ARGB_8888);
         Utils.matToBitmap(mat, outputImage);
         FileOutputStream out = null;
         try {
@@ -288,23 +276,22 @@ public class MainActivity extends AppCompatActivity implements CameraBridgeViewB
         outputImage.compress(Bitmap.CompressFormat.PNG, 100, out);
         mediaScan(procpath);
 
-        double woundSize = refSize * rcurrentMax / gcurrentMax;
+        double woundSize = refSize * Imgproc.contourArea(rcontours.get(rlargest_contour_index))/Imgproc.contourArea(gcontours.get(glargest_contour_index));
 
-        Woundhistory.procpath = procpath;
-        sendAway(procpath, woundSize, rectSizeHeight, rectSizeWidth);
+        WoundHistory.procpath = procpath;
+        sendAway(procpath,round(woundSize,2),round(realWoundLength,2),round(realWoundWidth,2));
     }
 
 
+    //camera states
     @Override
     public void onCameraViewStarted(int width, int height) {
         mat = new Mat(height, width, CvType.CV_8UC4);
     }
-
     @Override
     public void onCameraViewStopped() {
         mat.release();
     }
-
     @Override
     public Mat onCameraFrame(CameraBridgeViewBase.CvCameraViewFrame inputFrame) {
         mat = inputFrame.rgba();
@@ -321,14 +308,11 @@ public class MainActivity extends AppCompatActivity implements CameraBridgeViewB
         intent.putExtra("rectSizeWidth", rectSizeWidth);
         startActivity(intent);
     }
-
-    private void showToast(final String text) {
+    private void showToast(String text) {
         runOnUiThread(() ->
                 makeText(getApplicationContext(), text, LENGTH_SHORT).show()
         );
     }
-
-
     public void mediaScan(String picpath) {
         MediaScannerConnection.scanFile(this,
                 new String[]{picpath}, null,
@@ -336,7 +320,6 @@ public class MainActivity extends AppCompatActivity implements CameraBridgeViewB
                 }
         );
     }
-
     private String copy(String path, int copyNumber) {
         String copy_path = path + "_copy" + copyNumber + ".png";
         try {
@@ -347,5 +330,13 @@ public class MainActivity extends AppCompatActivity implements CameraBridgeViewB
             e.printStackTrace();
         }
         return null;
+    }
+    public static double round(double value, int places) {
+        if (places < 0) throw new IllegalArgumentException();
+
+        long factor = (long) Math.pow(10, places);
+        value = value * factor;
+        long tmp = Math.round(value);
+        return (double) tmp / factor;
     }
 }

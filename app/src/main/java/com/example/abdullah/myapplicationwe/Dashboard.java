@@ -1,17 +1,10 @@
 package com.example.abdullah.myapplicationwe;
 
-import android.app.Activity;
 import android.content.Intent;
-import android.graphics.Bitmap;
-import android.os.Environment;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
-import android.view.Window;
-import android.view.WindowManager;
-
-import org.opencv.android.Utils;
 
 import java.io.BufferedInputStream;
 import java.io.File;
@@ -20,7 +13,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
@@ -239,22 +231,22 @@ public class Dashboard extends AppCompatActivity {
         startActivity(intent);
     }
 
-    // starte die Activity MainActivity
+    // starte die Activity DetectorCamera
     private void handleStartCamera(final IntentMessage intentMessage) {
         showToast("StartCamera funktioniert!");
-        Intent intent = new Intent(this, MainActivity.class);
+        Intent intent = new Intent(this, DetectorCamera.class);
         startActivity(intent);
     }
 
-    // starte Activity Woundhistory
+    // starte Activity WoundHistory
     private void handleWundverlaufAnzeigen(final IntentMessage intentMessage) {
-        Intent intent = new Intent(this, Woundhistory.class);
+        Intent intent = new Intent(this, WoundHistory.class);
         startActivity(intent);
     }
 
     // Bild wird aufgenommen und analysiert, anschließend wird Activity Result ausgeführt
     private void handleTakePicture(final IntentMessage intentMessage){
-        MainActivity.getInstance().handleTakePicture();
+        DetectorCamera.getInstance().handleTakePicture();
     }
 
     // Eine Zahl zwischen 1-12 wird eingelesen, die Klasse Localization wird gestartet
@@ -272,7 +264,7 @@ public class Dashboard extends AppCompatActivity {
 
     // "ja" oder nein "nein" als intent.
     // falls "ja": starte Activity Localization
-    // falls "nein": gehe zurück zu Activity MainActivity, um noch ein Bild aufzunehmen
+    // falls "nein": gehe zurück zu Activity DetectorCamera, um noch ein Bild aufzunehmen
     private void handleConfirmAction(final IntentMessage intentMessage) {
 
         List<Slot> slots = intentMessage.getSlots();
@@ -301,7 +293,7 @@ public class Dashboard extends AppCompatActivity {
 
     public void next(View view) {
 
-        Intent intent = new Intent(this, MainActivity.class);
+        Intent intent = new Intent(this, DetectorCamera.class);
         startActivity(intent);
 
 
@@ -309,7 +301,7 @@ public class Dashboard extends AppCompatActivity {
     }
 
 
-    private void showToast(final String text) {
+    private void showToast(String text) {
         runOnUiThread(() ->
                 makeText(getApplicationContext(), text, LENGTH_SHORT).show()
         );

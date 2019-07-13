@@ -62,7 +62,7 @@ public class Result extends AppCompatActivity {
         double rectSizeWidth = getIntent().getDoubleExtra("rectSizeWidth", 0);
 
         TextView showSize = findViewById(R.id.textView);
-        showSize.setText("Wundgröße: " + woundSize + " cm² \n Höhe: " + rectSizeHeight + "\n Breite: " + rectSizeWidth);
+        showSize.setText("Wundgröße: " + woundSize + " cm² \nHöhe: " + rectSizeHeight + " cm²" + "\nBreite: " + rectSizeWidth + " cm²");
 
 
         Bitmap bitmap = BitmapFactory.decodeFile(procpath);

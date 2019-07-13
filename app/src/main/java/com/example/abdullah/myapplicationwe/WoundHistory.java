@@ -7,7 +7,7 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.ImageView;
 
-public class Woundhistory extends AppCompatActivity {
+public class WoundHistory extends AppCompatActivity {
 
     public static String procpath;
 
