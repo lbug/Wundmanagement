@@ -1,10 +1,12 @@
 package com.example.abdullah.myapplicationwe;
 
 import android.content.Intent;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
+
+import com.example.abdullah.myapplicationwe.Datenbank.DBDataSource;
 
 import java.io.BufferedInputStream;
 import java.io.File;
@@ -34,6 +36,7 @@ public class Dashboard extends AppCompatActivity {
     private static final String TAG = Dashboard.class.getSimpleName();
     private File assistantLocation;
     private SnipsPlatformClient client;
+    private DBDataSource dataSource;
 
 
     @Override
@@ -52,6 +55,14 @@ public class Dashboard extends AppCompatActivity {
         assistantLocation = new File(getFilesDir(), "snips");
         extractAssistantIfNeeded(assistantLocation);
         startSnips(assistantLocation);
+
+        //Datenbank starten
+        dataSource = new DBDataSource(this);
+        Log.d("Datenbank", "Die Datenquelle wird geöffnet.");
+        dataSource.open();
+
+        //Testdatensätze erstellen
+        dataSource.createTestRows(dataSource);
     }
 
     //snips kram
