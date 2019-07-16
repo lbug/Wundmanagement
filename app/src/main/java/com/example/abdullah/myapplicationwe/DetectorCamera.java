@@ -11,6 +11,8 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 
+import com.example.abdullah.myapplicationwe.Datenbank.DBDataSource;
+
 import org.apache.commons.io.FileUtils;
 import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.CameraBridgeViewBase;
@@ -132,7 +134,7 @@ public class DetectorCamera extends AppCompatActivity implements CameraBridgeVie
     };
 
 
-    public void handleTakePicture() {
+    public void handleTakePicture(DBDataSource dataSource) {
         makeText(this, "Command received", LENGTH_LONG).show();
         // convert to bitmap
         if (mat.size().height != 0 && mat.size().width != 0) {
@@ -153,13 +155,13 @@ public class DetectorCamera extends AppCompatActivity implements CameraBridgeVie
 
         Log.d("Bild gemacht", "Es wurde ein Bild gemacht");
 
-        detectWound(procpath);
+        detectWound(procpath,dataSource);
     }
 
 
 
     //wound detector
-    private void detectWound(String procpath) {
+    private void detectWound(String procpath, DBDataSource dataSource) {
 
         Bitmap bitmap = BitmapFactory.decodeFile(procpath);
 
@@ -169,9 +171,9 @@ public class DetectorCamera extends AppCompatActivity implements CameraBridgeVie
         Mat rgbMat = new Mat();
         Imgproc.cvtColor(mat, rgbMat, Imgproc.COLOR_RGBA2BGR);
 
-        Photo.fastNlMeansDenoising(rgbMat, rgbMat, 50, 7, 21);
+        Photo.fastNlMeansDenoising(rgbMat, rgbMat, 25, 7, 21);
 
-        Imgproc.blur(rgbMat, rgbMat, new Size(30, 30));
+        Imgproc.blur(rgbMat, rgbMat, new Size(15, 15));
         Imgproc.threshold(rgbMat,rgbMat,114,255,0);
         Mat element = getStructuringElement( MORPH_ELLIPSE,
                 new Size( 30, 30 ),
@@ -179,8 +181,8 @@ public class DetectorCamera extends AppCompatActivity implements CameraBridgeVie
         Imgproc.dilate( rgbMat, rgbMat, element );
 
         /**Mat dilatedMat = new Mat();
-         Mat kernel = Imgproc.getStructuringElement(Imgproc.MORPH_ELLIPSE, new Size(7, 7));
-         Imgproc.morphologyEx(rgbMat, dilatedMat, Imgproc.MORPH_OPEN, kernel);**/
+        Mat kernel = Imgproc.getStructuringElement(Imgproc.MORPH_ELLIPSE, new Size(7, 7));
+        Imgproc.morphologyEx(rgbMat, dilatedMat, Imgproc.MORPH_OPEN, kernel);**/
 
         //green
         Mat greenMat = new Mat();
@@ -220,7 +222,7 @@ public class DetectorCamera extends AppCompatActivity implements CameraBridgeVie
             }
         }
 
-        Imgproc.drawContours(mat, ghullList, glargest_contour_index, new Scalar(0, 0, 255, 255), 2);
+
 
         List<MatOfPoint> rhullList = new ArrayList<>();
         for (MatOfPoint contour : rcontours) {
@@ -235,7 +237,7 @@ public class DetectorCamera extends AppCompatActivity implements CameraBridgeVie
             rhullList.add(new MatOfPoint(hullPoints));
         }
 
-        MatOfPoint2f[] contoursPoly  = new MatOfPoint2f[rcontours.size()];
+        MatOfPoint2f[] contoursPoly = new MatOfPoint2f[rcontours.size()];
         Rect[] boundRect = new Rect[rcontours.size()];
         Rect[] boundRectg = new Rect[gcontours.size()];
         double rlargest_area =0;
@@ -248,22 +250,37 @@ public class DetectorCamera extends AppCompatActivity implements CameraBridgeVie
             }
         }
 
+
+        Imgproc.drawContours(mat, ghullList, glargest_contour_index, new Scalar(0, 0, 255, 255), 2);
         Imgproc.drawContours(mat, rhullList, rlargest_contour_index, new Scalar(0, 255, 0, 255), 2);
 
         //lets draw a bounding rectangle
-        contoursPoly[rlargest_contour_index] = new MatOfPoint2f();
-        Imgproc.approxPolyDP(new MatOfPoint2f(rcontours.get(rlargest_contour_index).toArray()), contoursPoly[rlargest_contour_index], 3, true);
-        boundRect[rlargest_contour_index] = Imgproc.boundingRect(new MatOfPoint(contoursPoly[rlargest_contour_index].toArray()));
-        Imgproc.rectangle(mat, boundRect[rlargest_contour_index].tl(), boundRect[rlargest_contour_index].br(), new Scalar(0, 255, 0, 255), 2);
+        if (rcontours.isEmpty()) {
+        } else {
+            contoursPoly[rlargest_contour_index] = new MatOfPoint2f();
+            Imgproc.approxPolyDP(new MatOfPoint2f(rcontours.get(rlargest_contour_index).toArray()), contoursPoly[rlargest_contour_index], 3, true);
+            boundRect[rlargest_contour_index] = Imgproc.boundingRect(new MatOfPoint(contoursPoly[rlargest_contour_index].toArray()));
+        //Imgproc.rectangle(mat, boundRect[rlargest_contour_index].tl(), boundRect[rlargest_contour_index].br(), new Scalar(0, 255, 0, 255), 2);
+        }
 
         //lets create an imaginary bounding rectangle for the marker
-        contoursPoly[glargest_contour_index] = new MatOfPoint2f();
-        Imgproc.approxPolyDP(new MatOfPoint2f(gcontours.get(glargest_contour_index).toArray()), contoursPoly[glargest_contour_index], 3, true);
-        boundRectg[glargest_contour_index] = Imgproc.boundingRect(new MatOfPoint(contoursPoly[glargest_contour_index].toArray()));
+        if (gcontours.isEmpty()) {
+        } else {
+            contoursPoly[glargest_contour_index] = new MatOfPoint2f();
+            Imgproc.approxPolyDP(new MatOfPoint2f(gcontours.get(glargest_contour_index).toArray()), contoursPoly[glargest_contour_index], 3, true);
+            boundRectg[glargest_contour_index] = Imgproc.boundingRect(new MatOfPoint(contoursPoly[glargest_contour_index].toArray()));
         //Imgproc.rectangle(mat, boundRectg[glargest_contour_index].tl(), boundRectg[glargest_contour_index].br(), new Scalar(0, 0, 255, 255), 2);
+        }
 
-        double realWoundLength = (refLengthandWidth*boundRect[rlargest_contour_index].size().height)/(boundRectg[glargest_contour_index].size().height);
-        double realWoundWidth = (refLengthandWidth*boundRect[rlargest_contour_index].size().width)/(boundRectg[glargest_contour_index].size().width);
+        double realWoundLength = 0;
+        double realWoundWidth = 0;
+        double woundSize = 0;
+        if (rcontours.isEmpty() || gcontours.isEmpty()) {
+        } else {
+            realWoundLength = (refLengthandWidth*boundRect[rlargest_contour_index].size().height)/(boundRectg[glargest_contour_index].size().height);
+            realWoundWidth = (refLengthandWidth*boundRect[rlargest_contour_index].size().width)/(boundRectg[glargest_contour_index].size().width);
+            woundSize = refSize * Imgproc.contourArea(rcontours.get(rlargest_contour_index))/Imgproc.contourArea(gcontours.get(glargest_contour_index));
+        }
 
         Bitmap outputImage= Bitmap.createBitmap(mat.cols(), mat.rows(), Bitmap.Config.ARGB_8888);
         Utils.matToBitmap(mat, outputImage);
@@ -276,10 +293,8 @@ public class DetectorCamera extends AppCompatActivity implements CameraBridgeVie
         outputImage.compress(Bitmap.CompressFormat.PNG, 100, out);
         mediaScan(procpath);
 
-        double woundSize = refSize * Imgproc.contourArea(rcontours.get(rlargest_contour_index))/Imgproc.contourArea(gcontours.get(glargest_contour_index));
-
         WoundHistory.procpath = procpath;
-        sendAway(procpath,round(woundSize,2),round(realWoundLength,2),round(realWoundWidth,2));
+        sendAway(procpath,round(woundSize,2),round(realWoundLength,2),round(realWoundWidth,2),dataSource);
     }
 
 
@@ -298,14 +313,17 @@ public class DetectorCamera extends AppCompatActivity implements CameraBridgeVie
         return mat;
     }
 
-
     //miscellaneous
-    private void sendAway(String procpath, double woundSize, double rectSizeHeight, double rectSizeWidth) {
+    private void sendAway(String procpath, double woundSize, double rectSizeHeight, double rectSizeWidth,DBDataSource dataSource) {
+
         Intent intent = new Intent(this, Result.class);
         intent.putExtra("image", procpath);
-        intent.putExtra("woundSize", woundSize);
+        //intent.putExtra("woundSize", woundSize);
         intent.putExtra("rectSizeHeight", rectSizeHeight);
         intent.putExtra("rectSizeWidth", rectSizeWidth);
+
+        dataSource.createPicture(procpath, rectSizeHeight, rectSizeWidth);
+
         startActivity(intent);
     }
     private void showToast(String text) {

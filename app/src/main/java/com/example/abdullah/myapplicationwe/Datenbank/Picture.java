@@ -1,25 +1,27 @@
 package com.example.abdullah.myapplicationwe.Datenbank;
 
 public class Picture {
-    private long pictureID;
+    private int pictureID;
     private long timestamp;
     private String woundImagePath;
-    private double woundLength;
+    private double woundHeight;
     private double woundWidth;
+    //private double woundSize;
 
-    public Picture(long id, long timestamp, String woundImagePath, double woundLength, double woundWidth) {
+    public Picture(int id, long timestamp, String woundImagePath, double woundHeight, double woundWidth) {
         this.pictureID = id;
         this.timestamp = timestamp;
         this.woundImagePath = woundImagePath;
-        this.woundLength = woundLength;
+        this.woundHeight = woundHeight;
         this.woundWidth = woundWidth;
+        //this.woundSize = woundSize;
     }
 
     public long getPictureID() {
         return pictureID;
     }
 
-    public void setPictureID(long pictureID) {
+    public void setPictureID(int pictureID) {
         this.pictureID = pictureID;
     }
 
@@ -39,12 +41,12 @@ public class Picture {
         this.woundImagePath = woundImagePath;
     }
 
-    public double getWoundLength() {
-        return woundLength;
+    public double getWoundHeight() {
+        return woundHeight;
     }
 
-    public void setWoundLength(double woundLength) {
-        this.woundLength = woundLength;
+    public void setWoundHeight(double woundHeight) {
+        this.woundHeight = woundHeight;
     }
 
     public double getWoundWidth() {
@@ -54,4 +56,12 @@ public class Picture {
     public void setWoundWidth(double woundWidth) {
         this.woundWidth = woundWidth;
     }
+
+    //public double getWoundSize() {
+        //return woundSize;
+    //}
+
+    //public void setWoundSize(double woundSize) {
+        //this.woundSize = woundSize;
+    //}
 }

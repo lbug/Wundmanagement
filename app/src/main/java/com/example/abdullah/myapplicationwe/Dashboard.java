@@ -7,6 +7,7 @@ import android.util.Log;
 import android.view.View;
 
 import com.example.abdullah.myapplicationwe.Datenbank.DBDataSource;
+import com.example.abdullah.myapplicationwe.Datenbank.Picture;
 
 import java.io.BufferedInputStream;
 import java.io.File;
@@ -51,18 +52,15 @@ public class Dashboard extends AppCompatActivity {
                         | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
         setContentView(R.layout.activity_dashboard);
 
-        // Initialisiere Snips
-        assistantLocation = new File(getFilesDir(), "snips");
-        extractAssistantIfNeeded(assistantLocation);
-        startSnips(assistantLocation);
-
         //Datenbank starten
         dataSource = new DBDataSource(this);
         Log.d("Datenbank", "Die Datenquelle wird geöffnet.");
         dataSource.open();
 
-        //Testdatensätze erstellen
-        dataSource.createTestRows(dataSource);
+        // Initialisiere Snips
+        assistantLocation = new File(getFilesDir(), "snips");
+        extractAssistantIfNeeded(assistantLocation);
+        startSnips(assistantLocation);
     }
 
     //snips kram
@@ -252,12 +250,25 @@ public class Dashboard extends AppCompatActivity {
     // starte Activity WoundHistory
     private void handleWundverlaufAnzeigen(final IntentMessage intentMessage) {
         Intent intent = new Intent(this, WoundHistory.class);
+        List<Picture> pictures = dataSource.lastThreePictures();
+        ArrayList<String> pictureFilepath = new ArrayList<>();
+        ArrayList<String> pictureTimestamp = null;
+        Log.d("Datenbank", "Path 1: " + pictures.get(0).getWoundImagePath());
+        Log.d("Datenbank", "Path 2: " + pictures.get(1).getWoundImagePath());
+        Log.d("Datenbank", "Path 3: " + pictures.get(2).getWoundImagePath());
+
+        for(int i = 0; i < pictures.size(); i++) {
+            String path = pictures.get(i).getWoundImagePath();
+            pictureFilepath.add(path);
+            //pictureTimestamp.add(String.valueOf(pictures.get(i).getTimestamp()));
+        }
+        intent.putStringArrayListExtra("PictureFilepaths", pictureFilepath);
         startActivity(intent);
     }
 
     // Bild wird aufgenommen und analysiert, anschließend wird Activity Result ausgeführt
     private void handleTakePicture(final IntentMessage intentMessage){
-        DetectorCamera.getInstance().handleTakePicture();
+        DetectorCamera.getInstance().handleTakePicture(dataSource);
     }
 
     // Eine Zahl zwischen 1-12 wird eingelesen, die Klasse Localization wird gestartet
