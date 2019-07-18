@@ -16,7 +16,7 @@ public class DBDataSource {
 
     private static SQLiteDatabase database;
     private DBHelper dbHelper;
-    private String[] pictureColumns = {DBHelper.COLUMN_ID, DBHelper.COLUMN_TIMESTAMP, DBHelper.COLUMN_IMAGEPATH, DBHelper.COLUMN_HEIGTH, DBHelper.COLUMN_WIDTH, DBHelper.COLUMN_SECTOR};
+    private String[] pictureColumns = {DBHelper.COLUMN_ID, DBHelper.COLUMN_TIMESTAMP, DBHelper.COLUMN_IMAGEPATH, DBHelper.COLUMN_HEIGTH, DBHelper.COLUMN_WIDTH, DBHelper.COLUMN_SECTOR, DBHelper.COLUMN_WOUNDSIZE};
 
     public static SQLiteDatabase getInstanceOfDatabase(){
         return database;
@@ -48,14 +48,14 @@ public class DBDataSource {
     }
 
     //Bilddatensatz erstellen
-    public void createPicture(String imagepath, double woundHeigth, double woundWidth) {
+    public void createPicture(String imagepath, double woundHeigth, double woundWidth, double woundSize) {
         ContentValues values = new ContentValues();
 
         values.put(DBHelper.COLUMN_IMAGEPATH, imagepath);
         values.put(DBHelper.COLUMN_HEIGTH, woundHeigth);
         values.put(DBHelper.COLUMN_WIDTH, woundWidth);
         //values.put(DBHelper.COLUMN_SECTOR, woundSector);
-        //values.put(DBHelper.COLUMN_WOUNDSIZE, woundSize);
+        values.put(DBHelper.COLUMN_WOUNDSIZE, woundSize);
 
         long timestamp = System.currentTimeMillis() / 1000L; //Unixtime
         values.put(DBHelper.COLUMN_TIMESTAMP, timestamp);
@@ -81,7 +81,7 @@ public class DBDataSource {
             int idImageHeigth = cursor.getColumnIndex(DBHelper.COLUMN_HEIGTH);
             int idImageWidth = cursor.getColumnIndex(DBHelper.COLUMN_WIDTH);
             int idWoundSector = cursor.getColumnIndexOrThrow(DBHelper.COLUMN_SECTOR);
-            //int idWoundSize = cursor.getColumnIndexOrThrow(DBHelper.COLUMN_WOUNDSIZE);
+            int idWoundSize = cursor.getColumnIndexOrThrow(DBHelper.COLUMN_WOUNDSIZE);
 
             id = cursor.getInt(idIndex);
             timestamp = cursor.getLong(idTimestamp);
@@ -89,9 +89,9 @@ public class DBDataSource {
             imageHeigth = cursor.getDouble(idImageHeigth);
             imageWidth = cursor.getDouble(idImageWidth);
             woundSector = cursor.getInt(idWoundSector);
-            //woundSize = cursor.getDouble(idWoundSize);
+            woundSize = cursor.getDouble(idWoundSize);
 
-            picture = new Picture(id, timestamp, imagepath, imageHeigth, imageWidth, woundSector);
+            picture = new Picture(id, timestamp, imagepath, imageHeigth, imageWidth,woundSize, woundSector);
         } else{
             Log.d("Datenbank", "Cursor ist null");
         }

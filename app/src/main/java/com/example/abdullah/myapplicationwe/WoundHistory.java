@@ -25,6 +25,7 @@ public class WoundHistory extends AppCompatActivity {
     public static ArrayList<String> timestamps;
     public static ArrayList<String> heights;
     public static ArrayList<String> widths;
+    public static ArrayList<String> sizes;
     public static int pictureIndex = 0;
     private static WoundHistory instance;
     Dashboard dashboard;
@@ -65,11 +66,11 @@ public class WoundHistory extends AppCompatActivity {
         timestamps = getIntent().getStringArrayListExtra("PictureTimestamps");
         heights = getIntent().getStringArrayListExtra("PictureHeights");
         widths = getIntent().getStringArrayListExtra("PictureWidths");
+        sizes = getIntent().getStringArrayListExtra("PictureSizes");
         this.setFirstImage(0);
     }
 
     public void setFirstImage(int pictureSet) {
-
 
         Long unixTime = Long.parseLong(timestamps.get(pictureIndex));
         Date zeit = new Date(unixTime * 1000L);
@@ -100,7 +101,7 @@ public class WoundHistory extends AppCompatActivity {
 
                 Bitmap bitmap = BitmapFactory.decodeFile(filepaths.get(pictureIndex));
                 imageView.setImageBitmap(bitmap);
-                textView.setText("Höhe: " + heights.get(pictureIndex) + "\nBreite: " + widths.get(pictureIndex) + "\nZeit: " + formattedDate);
+                textView.setText("Wundgröße: " + sizes.get(pictureIndex) + "\nHöhe: " + heights.get(pictureIndex) + "\nBreite: " + widths.get(pictureIndex) + "\nZeit: " + formattedDate);
             } catch (Exception e) {
                 e.printStackTrace();
                 Log.d("Datenbank", "Abgestürzt");
@@ -143,7 +144,7 @@ public class WoundHistory extends AppCompatActivity {
 
                 Bitmap bitmap = BitmapFactory.decodeFile(filepaths.get(pictureIndex));
                 imageView.setImageBitmap(bitmap);
-                textView.setText("Höhe: " + heights.get(pictureIndex) + "\nBreite: " + widths.get(pictureIndex) + "\nZeit: " + formattedDate);
+                textView.setText("Wundgröße: " + sizes.get(pictureIndex) + "Höhe: " + heights.get(pictureIndex) + "\nBreite: " + widths.get(pictureIndex) + "\nZeit: " + formattedDate);
             }
             catch (Exception e){
                 e.printStackTrace();

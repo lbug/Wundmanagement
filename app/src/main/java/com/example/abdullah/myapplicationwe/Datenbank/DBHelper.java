@@ -28,6 +28,7 @@ public class DBHelper extends SQLiteOpenHelper{
                     COLUMN_HEIGTH + " REAL NOT NULL," +
                     COLUMN_WIDTH + " REAL NOT NULL," +
                     COLUMN_SECTOR + " INTEGER," +
+                    COLUMN_WOUNDSIZE + " REAL NOT NULL," +
                     "PRIMARY KEY(" + COLUMN_ID + "," + COLUMN_TIMESTAMP + "));";
 
     public DBHelper(Context context) {

@@ -34,6 +34,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="180px"
             android:layout_weight="1"
+            android:onClick="history"
             app:srcCompat="@mipmap/dash2" />
     </LinearLayout>
 

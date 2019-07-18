@@ -326,7 +326,7 @@ public class DetectorCamera extends AppCompatActivity implements CameraBridgeVie
         intent.putExtra("rectSizeHeight", rectSizeHeight);
         intent.putExtra("rectSizeWidth", rectSizeWidth);
 
-        dataSource.createPicture(procpath, rectSizeHeight, rectSizeWidth);
+        dataSource.createPicture(procpath, rectSizeHeight, rectSizeWidth, woundSize);
 
         startActivity(intent);
     }

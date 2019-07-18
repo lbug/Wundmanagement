@@ -263,10 +263,7 @@ public class Dashboard extends AppCompatActivity {
         ArrayList<String> pictureHeight = new ArrayList<>();
         ArrayList<String> pictureWidth = new ArrayList<>();
         ArrayList<String> pictureSector = new ArrayList<>();
-
-        Log.d("Datenbank", "Path 1: " + pictures.get(0).getWoundImagePath());
-        Log.d("Datenbank", "Path 2: " + pictures.get(1).getWoundImagePath());
-        Log.d("Datenbank", "Path 3: " + pictures.get(2).getWoundImagePath());
+        ArrayList<String> pictureSize = new ArrayList<>();
 
         for(int i = 0; i < pictures.size(); i++) {
             pictureFilepath.add(pictures.get(i).getWoundImagePath());
@@ -274,11 +271,13 @@ public class Dashboard extends AppCompatActivity {
             pictureHeight.add(String.valueOf(pictures.get(i).getWoundHeight()));
             pictureWidth.add(String.valueOf(pictures.get(i).getWoundWidth()));
             pictureSector.add(String.valueOf(pictures.get(i).getWoundSector()));
+            pictureSize.add(String.valueOf(pictures.get(i).getWoundSize()));
         }
         intent.putStringArrayListExtra("PictureFilepaths", pictureFilepath);
         intent.putStringArrayListExtra("PictureTimestamps", pictureTimestamp);
         intent.putStringArrayListExtra("PictureHeights", pictureHeight);
         intent.putStringArrayListExtra("PictureWidths", pictureWidth);
+        intent.putStringArrayListExtra("PictureSizes", pictureSize);
         startActivity(intent);
     }
 
@@ -335,16 +334,16 @@ public class Dashboard extends AppCompatActivity {
     }
 
 
-
-    public void next(View view) {
-
-        Intent intent = new Intent(this, DetectorCamera.class);
-        startActivity(intent);
-
-
-
+    public void history(View view) {
+        //Intent intent = new Intent(this, WoundHistory.class);
+        //startActivity(intent);
+        showToast("Noch nicht in Funktion");
     }
 
+    public void next(View view) {
+        Intent intent = new Intent(this, DetectorCamera.class);
+        startActivity(intent);
+    }
 
     private void showToast(String text) {
         runOnUiThread(() ->

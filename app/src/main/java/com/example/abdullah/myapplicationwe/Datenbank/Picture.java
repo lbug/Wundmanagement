@@ -8,16 +8,16 @@ public class Picture {
     private double woundWidth;
 
     private int woundSector;
-    //private double woundSize;
+    private double woundSize;
 
-    public Picture(int id, long timestamp, String woundImagePath, double woundHeight, double woundWidth, int woundSector) {
+    public Picture(int id, long timestamp, String woundImagePath, double woundHeight, double woundWidth,double woundSize, int woundSector) {
         this.pictureID = id;
         this.timestamp = timestamp;
         this.woundImagePath = woundImagePath;
         this.woundHeight = woundHeight;
         this.woundWidth = woundWidth;
         this.woundSector = woundSector;
-        //this.woundSize = woundSize;
+        this.woundSize = woundSize;
     }
 
     public long getPictureID() {
@@ -67,11 +67,12 @@ public class Picture {
     public void setWoundSector(int woundSector) {
         this.woundSector = woundSector;
     }
-    //public double getWoundSize() {
-        //return woundSize;
-    //}
 
-    //public void setWoundSize(double woundSize) {
-        //this.woundSize = woundSize;
-    //}
+    public double getWoundSize() {
+        return woundSize;
+    }
+
+    public void setWoundSize(double woundSize) {
+        this.woundSize = woundSize;
+    }
 }
