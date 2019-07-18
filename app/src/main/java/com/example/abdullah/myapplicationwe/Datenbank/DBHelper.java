@@ -17,6 +17,7 @@ public class DBHelper extends SQLiteOpenHelper{
     public static final String COLUMN_IMAGEPATH = "Imagepath";
     public static final String COLUMN_HEIGTH = "woundLength";
     public static final String COLUMN_WIDTH = "woundWidth";
+    public static final String COLUMN_SECTOR = "woundSector";
     public static final String COLUMN_WOUNDSIZE = "woundSize";
 
     public static final String SQL_CREATE_PICTURE_NEW =
@@ -26,6 +27,7 @@ public class DBHelper extends SQLiteOpenHelper{
                     COLUMN_IMAGEPATH + " TEXT NOT NULL," +
                     COLUMN_HEIGTH + " REAL NOT NULL," +
                     COLUMN_WIDTH + " REAL NOT NULL," +
+                    COLUMN_SECTOR + " INTEGER," +
                     "PRIMARY KEY(" + COLUMN_ID + "," + COLUMN_TIMESTAMP + "));";
 
     public DBHelper(Context context) {

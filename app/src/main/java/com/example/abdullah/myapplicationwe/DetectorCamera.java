@@ -5,9 +5,9 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.media.MediaScannerConnection;
+import android.os.Bundle;
 import android.os.Environment;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 
@@ -28,9 +28,7 @@ import org.opencv.core.MatOfPoint2f;
 import org.opencv.core.Point;
 import org.opencv.core.Rect;
 import org.opencv.core.Scalar;
-import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
-import org.opencv.photo.Photo;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -40,9 +38,9 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-import static android.widget.Toast.*;
-import static org.opencv.imgproc.Imgproc.MORPH_ELLIPSE;
-import static org.opencv.imgproc.Imgproc.getStructuringElement;
+import static android.widget.Toast.LENGTH_LONG;
+import static android.widget.Toast.LENGTH_SHORT;
+import static android.widget.Toast.makeText;
 
 public class DetectorCamera extends AppCompatActivity implements CameraBridgeViewBase.CvCameraViewListener2 {
 
@@ -71,7 +69,7 @@ public class DetectorCamera extends AppCompatActivity implements CameraBridgeVie
                         | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
                         | View.SYSTEM_UI_FLAG_FULLSCREEN
                         | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
-        setContentView(R.layout.activity_main);
+        setContentView(R.layout.activity_cameradetector);
 
         cameraBridgeViewBase = findViewById(R.id.faceDetectionJavaCameraView2);
         cameraBridgeViewBase.setVisibility(CameraBridgeViewBase.VISIBLE);
@@ -163,42 +161,37 @@ public class DetectorCamera extends AppCompatActivity implements CameraBridgeVie
     //wound detector
     private void detectWound(String procpath, DBDataSource dataSource) {
 
+        //let's load the image into mat and convert it to BGR into rgbMat
         Bitmap bitmap = BitmapFactory.decodeFile(procpath);
-
         Mat mat = new Mat(bitmap.getWidth(), bitmap.getHeight(), CvType.CV_8UC3);
         Utils.bitmapToMat(bitmap, mat);
-
         Mat rgbMat = new Mat();
         Imgproc.cvtColor(mat, rgbMat, Imgproc.COLOR_RGBA2BGR);
 
-        Photo.fastNlMeansDenoising(rgbMat, rgbMat, 25, 7, 21);
-
+        //let's apply filters to rgbMat
+        /**Photo.fastNlMeansDenoising(rgbMat, rgbMat, 25, 7, 21);
         Imgproc.blur(rgbMat, rgbMat, new Size(15, 15));
         Imgproc.threshold(rgbMat,rgbMat,114,255,0);
         Mat element = getStructuringElement( MORPH_ELLIPSE,
                 new Size( 30, 30 ),
                 new Point( 3, 3 ) );
-        Imgproc.dilate( rgbMat, rgbMat, element );
+        Imgproc.dilate( rgbMat, rgbMat, element );**/
 
-        /**Mat dilatedMat = new Mat();
-        Mat kernel = Imgproc.getStructuringElement(Imgproc.MORPH_ELLIPSE, new Size(7, 7));
-        Imgproc.morphologyEx(rgbMat, dilatedMat, Imgproc.MORPH_OPEN, kernel);**/
-
-        //green
+        //let's threshold some color ranges
         Mat greenMat = new Mat();
         Core.inRange(rgbMat, new Scalar(0, 120, 0), new Scalar(100, 255, 100), greenMat);
         Mat redMat = new Mat();
         Core.inRange(rgbMat, new Scalar(0, 0, 120), new Scalar(100, 100, 255), redMat);
 
-        //find contour
+        //let's find all contours and save them in lists
         Mat ghierarchy = new Mat();
         List<MatOfPoint> gcontours = new ArrayList<>();
         Mat rhierarchy = new Mat();
         List<MatOfPoint> rcontours = new ArrayList<>();
-
         Imgproc.findContours(greenMat, gcontours, ghierarchy, Imgproc.RETR_TREE, Imgproc.CHAIN_APPROX_SIMPLE);
         Imgproc.findContours(redMat, rcontours, rhierarchy, Imgproc.RETR_TREE, Imgproc.CHAIN_APPROX_SIMPLE);
 
+        //let's create a convexHull of all green contours
         List<MatOfPoint> ghullList = new ArrayList<>();
         for (MatOfPoint contour : gcontours) {
             MatOfInt hull = new MatOfInt();
@@ -212,6 +205,7 @@ public class DetectorCamera extends AppCompatActivity implements CameraBridgeVie
             ghullList.add(new MatOfPoint(hullPoints));
         }
 
+        //let's find the largest green contour index
         double glargest_area =0;
         int glargest_contour_index = 0;
         for (int contourIdx = 0; contourIdx < gcontours.size(); contourIdx++) {
@@ -222,8 +216,7 @@ public class DetectorCamera extends AppCompatActivity implements CameraBridgeVie
             }
         }
 
-
-
+        //let's create a convexHull of all red contours
         List<MatOfPoint> rhullList = new ArrayList<>();
         for (MatOfPoint contour : rcontours) {
             MatOfInt hull = new MatOfInt();
@@ -237,9 +230,7 @@ public class DetectorCamera extends AppCompatActivity implements CameraBridgeVie
             rhullList.add(new MatOfPoint(hullPoints));
         }
 
-        MatOfPoint2f[] contoursPoly = new MatOfPoint2f[rcontours.size()];
-        Rect[] boundRect = new Rect[rcontours.size()];
-        Rect[] boundRectg = new Rect[gcontours.size()];
+        //let's find the largest red contour index
         double rlargest_area =0;
         int rlargest_contour_index = 0;
         for (int contourIdx = 0; contourIdx < rcontours.size(); contourIdx++) {
@@ -250,17 +241,22 @@ public class DetectorCamera extends AppCompatActivity implements CameraBridgeVie
             }
         }
 
-
+        //let's draw the convexHulls
         Imgproc.drawContours(mat, ghullList, glargest_contour_index, new Scalar(0, 0, 255, 255), 2);
         Imgproc.drawContours(mat, rhullList, rlargest_contour_index, new Scalar(0, 255, 0, 255), 2);
 
-        //lets draw a bounding rectangle
+        //lets draw bounding rectangles
+        MatOfPoint2f[] contoursPoly  = new MatOfPoint2f[rcontours.size()];
+        Rect[] boundRect = new Rect[rcontours.size()];
+        Rect[] boundRectg = new Rect[gcontours.size()];
+
+        //let's create a bouding rectangle for the wound
         if (rcontours.isEmpty()) {
         } else {
             contoursPoly[rlargest_contour_index] = new MatOfPoint2f();
             Imgproc.approxPolyDP(new MatOfPoint2f(rcontours.get(rlargest_contour_index).toArray()), contoursPoly[rlargest_contour_index], 3, true);
             boundRect[rlargest_contour_index] = Imgproc.boundingRect(new MatOfPoint(contoursPoly[rlargest_contour_index].toArray()));
-        //Imgproc.rectangle(mat, boundRect[rlargest_contour_index].tl(), boundRect[rlargest_contour_index].br(), new Scalar(0, 255, 0, 255), 2);
+            Imgproc.rectangle(mat, boundRect[rlargest_contour_index].tl(), boundRect[rlargest_contour_index].br(), new Scalar(0, 255, 0, 255), 2);
         }
 
         //lets create an imaginary bounding rectangle for the marker
@@ -269,9 +265,10 @@ public class DetectorCamera extends AppCompatActivity implements CameraBridgeVie
             contoursPoly[glargest_contour_index] = new MatOfPoint2f();
             Imgproc.approxPolyDP(new MatOfPoint2f(gcontours.get(glargest_contour_index).toArray()), contoursPoly[glargest_contour_index], 3, true);
             boundRectg[glargest_contour_index] = Imgproc.boundingRect(new MatOfPoint(contoursPoly[glargest_contour_index].toArray()));
-        //Imgproc.rectangle(mat, boundRectg[glargest_contour_index].tl(), boundRectg[glargest_contour_index].br(), new Scalar(0, 0, 255, 255), 2);
+            //Imgproc.rectangle(mat, boundRectg[glargest_contour_index].tl(), boundRectg[glargest_contour_index].br(), new Scalar(0, 0, 255, 255), 2);
         }
 
+        //let's do some math
         double realWoundLength = 0;
         double realWoundWidth = 0;
         double woundSize = 0;
@@ -279,9 +276,15 @@ public class DetectorCamera extends AppCompatActivity implements CameraBridgeVie
         } else {
             realWoundLength = (refLengthandWidth*boundRect[rlargest_contour_index].size().height)/(boundRectg[glargest_contour_index].size().height);
             realWoundWidth = (refLengthandWidth*boundRect[rlargest_contour_index].size().width)/(boundRectg[glargest_contour_index].size().width);
+            System.out.println("KILIAN "+Imgproc.contourArea(rcontours.get(rlargest_contour_index)));
+            System.out.println("KILIAN "+Imgproc.contourArea(gcontours.get(glargest_contour_index)));
+            System.out.println("KILIAN "+refSize);
+
             woundSize = refSize * Imgproc.contourArea(rcontours.get(rlargest_contour_index))/Imgproc.contourArea(gcontours.get(glargest_contour_index));
+            System.out.println("KILIAN "+woundSize);
         }
 
+        //let's export the edited image
         Bitmap outputImage= Bitmap.createBitmap(mat.cols(), mat.rows(), Bitmap.Config.ARGB_8888);
         Utils.matToBitmap(mat, outputImage);
         FileOutputStream out = null;
@@ -293,6 +296,7 @@ public class DetectorCamera extends AppCompatActivity implements CameraBridgeVie
         outputImage.compress(Bitmap.CompressFormat.PNG, 100, out);
         mediaScan(procpath);
 
+        //return variables
         WoundHistory.procpath = procpath;
         sendAway(procpath,round(woundSize,2),round(realWoundLength,2),round(realWoundWidth,2),dataSource);
     }
@@ -318,7 +322,7 @@ public class DetectorCamera extends AppCompatActivity implements CameraBridgeVie
 
         Intent intent = new Intent(this, Result.class);
         intent.putExtra("image", procpath);
-        //intent.putExtra("woundSize", woundSize);
+        intent.putExtra("woundSize", woundSize);
         intent.putExtra("rectSizeHeight", rectSizeHeight);
         intent.putExtra("rectSizeWidth", rectSizeWidth);
 

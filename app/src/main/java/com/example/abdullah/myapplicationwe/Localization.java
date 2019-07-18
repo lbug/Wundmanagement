@@ -15,6 +15,7 @@ public class Localization extends AppCompatActivity {
 
 
     public static int woundSector=0;
+    public static String procPath = "";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -34,8 +35,41 @@ public class Localization extends AppCompatActivity {
         }
         else{
             switch(woundSector){
+                case 1:
+                    showImagePopup(R.mipmap.img1);
+                    break;
+                case 2:
+                    showImagePopup(R.mipmap.img2);
+                    break;
+                case 3:
+                    showImagePopup(R.mipmap.img3);
+                    break;
+                case 4:
+                    showImagePopup(R.mipmap.img4);
+                    break;
+                case 5:
+                    showImagePopup(R.mipmap.img5);
+                    break;
+                case 6:
+                    showImagePopup(R.mipmap.img6);
+                    break;
+                case 7:
+                    showImagePopup(R.mipmap.img7);
+                    break;
+                case 8:
+                    showImagePopup(R.mipmap.img8);
+                    break;
                 case 9:
                     showImagePopup(R.mipmap.img9);
+                    break;
+                case 10:
+                    showImagePopup(R.mipmap.img10);
+                    break;
+                case 11:
+                    showImagePopup(R.mipmap.img11);
+                    break;
+                case 12:
+                    showImagePopup(R.mipmap.img12);
                     break;
                 default:
                     showImagePopup(R.mipmap.img);

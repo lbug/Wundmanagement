@@ -14,12 +14,13 @@ public class DBDataSource {
 
     private static final String LOG_TAG = "Datenbank";
 
-    private SQLiteDatabase database;
+    private static SQLiteDatabase database;
     private DBHelper dbHelper;
-    private String[] woundColumns = {DBHelper.COLUMN_ID};
-    private String[] patientColumns = {DBHelper.COLUMN_ID};
-    private String[] pictureColumns = {DBHelper.COLUMN_ID, DBHelper.COLUMN_TIMESTAMP, DBHelper.COLUMN_IMAGEPATH, DBHelper.COLUMN_HEIGTH, DBHelper.COLUMN_WIDTH};
+    private String[] pictureColumns = {DBHelper.COLUMN_ID, DBHelper.COLUMN_TIMESTAMP, DBHelper.COLUMN_IMAGEPATH, DBHelper.COLUMN_HEIGTH, DBHelper.COLUMN_WIDTH, DBHelper.COLUMN_SECTOR};
 
+    public static SQLiteDatabase getInstanceOfDatabase(){
+        return database;
+    }
 
     public DBDataSource(Context context) {
         Log.d(LOG_TAG, "Unsere DataSource erzeugt jetzt den dbHelper.");
@@ -36,6 +37,15 @@ public class DBDataSource {
         dbHelper.close();
         Log.d("Datenbank", "Datenbank mit Hilfe des DbHelpers geschlossen.");
     }
+    public void insertSector(int sector, String path) {
+        ContentValues values = new ContentValues();
+
+        values.put(DBHelper.COLUMN_SECTOR, sector);
+
+        //database.update(DBHelper.TABLE_3_PICTURE, values, DBHelper.COLUMN_IMAGEPATH+"=" + "'" + path + "'", null);
+        Log.d("Datenbank","UPDATE picture SET woundSector = "+sector+" WHERE Imagepath = '" + path + "'");
+        database.rawQuery("UPDATE picture SET woundSector = "+sector+" WHERE Imagepath = '" + path + "'", null);
+    }
 
     //Bilddatensatz erstellen
     public void createPicture(String imagepath, double woundHeigth, double woundWidth) {
@@ -44,6 +54,7 @@ public class DBDataSource {
         values.put(DBHelper.COLUMN_IMAGEPATH, imagepath);
         values.put(DBHelper.COLUMN_HEIGTH, woundHeigth);
         values.put(DBHelper.COLUMN_WIDTH, woundWidth);
+        //values.put(DBHelper.COLUMN_SECTOR, woundSector);
         //values.put(DBHelper.COLUMN_WOUNDSIZE, woundSize);
 
         long timestamp = System.currentTimeMillis() / 1000L; //Unixtime
@@ -60,6 +71,7 @@ public class DBDataSource {
         String imagepath = "test";
         double imageHeigth = 0.0;
         double imageWidth = 0.0;
+        int woundSector = 0;
         double woundSize = 0.0;
 
         if(cursor != null) {
@@ -68,6 +80,7 @@ public class DBDataSource {
             int idImagepath = cursor.getColumnIndex(DBHelper.COLUMN_IMAGEPATH);
             int idImageHeigth = cursor.getColumnIndex(DBHelper.COLUMN_HEIGTH);
             int idImageWidth = cursor.getColumnIndex(DBHelper.COLUMN_WIDTH);
+            int idWoundSector = cursor.getColumnIndexOrThrow(DBHelper.COLUMN_SECTOR);
             //int idWoundSize = cursor.getColumnIndexOrThrow(DBHelper.COLUMN_WOUNDSIZE);
 
             id = cursor.getInt(idIndex);
@@ -75,9 +88,10 @@ public class DBDataSource {
             imagepath = cursor.getString(idImagepath);
             imageHeigth = cursor.getDouble(idImageHeigth);
             imageWidth = cursor.getDouble(idImageWidth);
+            woundSector = cursor.getInt(idWoundSector);
             //woundSize = cursor.getDouble(idWoundSize);
 
-            picture = new Picture(id, timestamp, imagepath, imageHeigth, imageWidth);
+            picture = new Picture(id, timestamp, imagepath, imageHeigth, imageWidth, woundSector);
         } else{
             Log.d("Datenbank", "Cursor ist null");
         }
@@ -89,8 +103,7 @@ public class DBDataSource {
     public List<Picture> lastThreePictures() {
         List<Picture> pictures = new ArrayList<>();
         Picture picture;
-        Cursor cursor = null;
-        cursor = database.query(DBHelper.TABLE_3_PICTURE, pictureColumns, null, null, null, null, DBHelper.COLUMN_TIMESTAMP + " DESC", "3");
+        Cursor cursor = database.query(DBHelper.TABLE_3_PICTURE, pictureColumns, null, null, null, null, DBHelper.COLUMN_TIMESTAMP + " DESC", "3");
         cursor.moveToFirst();
         while(!cursor.isAfterLast()) {
             picture = cursorToPicture(cursor);

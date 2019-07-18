@@ -37,7 +37,11 @@ public class Dashboard extends AppCompatActivity {
     private static final String TAG = Dashboard.class.getSimpleName();
     private File assistantLocation;
     private SnipsPlatformClient client;
-    private DBDataSource dataSource;
+    private static DBDataSource dataSource;
+
+    public static DBDataSource getDataSourceInstance(){
+        return dataSource;
+    }
 
 
     @Override
@@ -51,6 +55,7 @@ public class Dashboard extends AppCompatActivity {
                         | View.SYSTEM_UI_FLAG_FULLSCREEN
                         | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
         setContentView(R.layout.activity_dashboard);
+
 
         //Datenbank starten
         dataSource = new DBDataSource(this);
@@ -228,10 +233,12 @@ public class Dashboard extends AppCompatActivity {
 
     // navigiere zu einem neueren Bild im Wundverlauf aus
     private void handleNextPicture(final IntentMessage intentMessage) {
+        WoundHistory.getInstance().setImage(1);
     }
 
     // navigiere zu einem älteren Bild im Wundverlauf
     private void handleLastPicture(final IntentMessage intentMessage) {
+        WoundHistory.getInstance().setImage(-1);
     }
 
     // gehe zurück zum Dashboard
@@ -252,17 +259,26 @@ public class Dashboard extends AppCompatActivity {
         Intent intent = new Intent(this, WoundHistory.class);
         List<Picture> pictures = dataSource.lastThreePictures();
         ArrayList<String> pictureFilepath = new ArrayList<>();
-        ArrayList<String> pictureTimestamp = null;
+        ArrayList<String> pictureTimestamp = new ArrayList<>();
+        ArrayList<String> pictureHeight = new ArrayList<>();
+        ArrayList<String> pictureWidth = new ArrayList<>();
+        ArrayList<String> pictureSector = new ArrayList<>();
+
         Log.d("Datenbank", "Path 1: " + pictures.get(0).getWoundImagePath());
         Log.d("Datenbank", "Path 2: " + pictures.get(1).getWoundImagePath());
         Log.d("Datenbank", "Path 3: " + pictures.get(2).getWoundImagePath());
 
         for(int i = 0; i < pictures.size(); i++) {
-            String path = pictures.get(i).getWoundImagePath();
-            pictureFilepath.add(path);
-            //pictureTimestamp.add(String.valueOf(pictures.get(i).getTimestamp()));
+            pictureFilepath.add(pictures.get(i).getWoundImagePath());
+            pictureTimestamp.add(String.valueOf(pictures.get(i).getTimestamp()));
+            pictureHeight.add(String.valueOf(pictures.get(i).getWoundHeight()));
+            pictureWidth.add(String.valueOf(pictures.get(i).getWoundWidth()));
+            pictureSector.add(String.valueOf(pictures.get(i).getWoundSector()));
         }
         intent.putStringArrayListExtra("PictureFilepaths", pictureFilepath);
+        intent.putStringArrayListExtra("PictureTimestamps", pictureTimestamp);
+        intent.putStringArrayListExtra("PictureHeights", pictureHeight);
+        intent.putStringArrayListExtra("PictureWidths", pictureWidth);
         startActivity(intent);
     }
 
@@ -276,6 +292,13 @@ public class Dashboard extends AppCompatActivity {
         List<Slot> slots = intentMessage.getSlots();
         int v1 = (int) ((SlotValue.NumberValue) slots.get(0).getValue()).getValue();
         Localization.woundSector = v1;
+
+        //
+        Log.d("Datenbank", "Procpath: "+Localization.procPath);
+        dataSource.insertSector(v1, Localization.procPath);
+
+        WoundHistory.sector = v1;
+
         String message = "Wundsektor: " + v1;
         Log.d("Lukas", message);
         makeText(this, message, LENGTH_LONG).show();
