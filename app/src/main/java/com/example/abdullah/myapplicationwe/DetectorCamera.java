@@ -1,6 +1,7 @@
 package com.example.abdullah.myapplicationwe;
 
 
+import android.app.ProgressDialog;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -134,26 +135,40 @@ public class DetectorCamera extends AppCompatActivity implements CameraBridgeVie
 
     public void handleTakePicture(DBDataSource dataSource) {
         makeText(this, "Command received", LENGTH_LONG).show();
-        // convert to bitmap
-        if (mat.size().height != 0 && mat.size().width != 0) {
-            mBitmap = Bitmap.createBitmap(mat.cols(), mat.rows(), Bitmap.Config.ARGB_8888);
-            Utils.matToBitmap(mat, mBitmap);
-        }
+        ProgressDialog progress = new ProgressDialog(this);
+        progress.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+        progress.setIndeterminate(true);
+        progress.setMessage("Analyzing wound...");
+        progress.show();
 
-        java.util.Date date = new Date();
-        String procpath = Environment.getExternalStorageDirectory() + "/Pictures/" + date + "image.jpg";
 
-        FileOutputStream out = null;
-        try {
-            out = new FileOutputStream(procpath);
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        }
-        mBitmap.compress(Bitmap.CompressFormat.PNG, 100, out);
+        new Thread(new Runnable() {
+            public void run() {
+                // convert to bitmap
+                if (mat.size().height != 0 && mat.size().width != 0) {
+                    mBitmap = Bitmap.createBitmap(mat.cols(), mat.rows(), Bitmap.Config.ARGB_8888);
+                    Utils.matToBitmap(mat, mBitmap);
+                }
 
-        Log.d("Bild gemacht", "Es wurde ein Bild gemacht");
+                java.util.Date date = new Date();
+                String procpath = Environment.getExternalStorageDirectory() + "/Pictures/" + date + "image.jpg";
 
-        detectWound(procpath,dataSource);
+                FileOutputStream out = null;
+                try {
+                    out = new FileOutputStream(procpath);
+                } catch (FileNotFoundException e) {
+                    e.printStackTrace();
+                }
+                mBitmap.compress(Bitmap.CompressFormat.PNG, 100, out);
+
+                Log.d("Bild gemacht", "Es wurde ein Bild gemacht");
+
+                detectWound(procpath,dataSource);
+                runOnUiThread(() ->
+                        progress.hide()
+                );
+            }
+        }).start();
     }
 
 
